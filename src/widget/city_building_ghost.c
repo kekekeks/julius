@@ -791,14 +791,12 @@ int city_building_ghost_mark_deleting(const map_tile *tile)
 
 static void draw_merge_locations(int x, int y, int grid_offset)
 {
-    if(grid_offset <= 0)
-        return;
-    if ((map_random_get(grid_offset) & 7) >= 5)
-        return;
-
     int blocked_tiles = 0;
-    if(is_blocked_for_building(grid_offset, 1, &blocked_tiles))
+    if(grid_offset <= 0
+        ||(map_random_get(grid_offset) & 7) >= 5
+        || is_blocked_for_building(grid_offset, 1, &blocked_tiles)){
         return;
+    }
 
     int centerX = x + 58 / 2;
     int centerY = y + 30 / 2;
@@ -807,11 +805,21 @@ static void draw_merge_locations(int x, int y, int grid_offset)
     graphics_fill_rect(centerX - 2, centerY - 1, 4, 2, COLOR_MASK_GREEN);
 }
 
+static int show_mergers = 0;
+
+void city_building_ghost_toggle_mergers_display()
+{
+    show_mergers = !show_mergers;
+}
+
 void city_building_ghost_draw(const map_tile *tile)
 {
-    if(building_construction_type() == BUILDING_HOUSE_VACANT_LOT)
-        city_view_foreach_map_tile(draw_merge_locations);
-
+    if(show_mergers) {
+        int construction_type = building_construction_type();
+        if (construction_type == BUILDING_HOUSE_VACANT_LOT || construction_type == BUILDING_ROAD) {
+            city_view_foreach_map_tile(draw_merge_locations);
+        }
+    }
     if (!tile->grid_offset || scroll_in_progress()) {
         return;
     }
